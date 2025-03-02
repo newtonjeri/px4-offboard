@@ -28,6 +28,8 @@ setup(
         'console_scripts': [
                 'offboard_control = px4_offboard.offboard_control:main',
                 'visualizer = px4_offboard.visualizer:main',
+                'tf_publisher = px4_offboard.tf_publisher:main',
+                'rotor_joint_state_publisher = px4_offboard.rotor_joint_state_publisher:main',
         ],
     },
 )
