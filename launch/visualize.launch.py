@@ -40,21 +40,66 @@ from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 import os
 
+from launch.substitutions import Command, FindExecutable, PathJoinSubstitution
+from launch_ros.substitutions import FindPackageShare
+
+
+description_pkg = 'x500_drone_description'
+xacro_file = 'x500.urdf.xacro'
 
 def generate_launch_description():
     package_dir = get_package_share_directory('px4_offboard')
+
+    robot_description_content = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution(
+                [
+                    FindPackageShare(description_pkg),
+                    "description",
+                    xacro_file,
+                ]
+            ),
+
+        ]
+    )
+    robot_description = {"robot_description": robot_description_content}
+
     return LaunchDescription([
+        
+        Node(
+            package='robot_state_publisher',
+            executable='robot_state_publisher',
+            name='robot_state_publisher',
+            output='screen',
+            parameters=[robot_description]
+        ),
         Node(
             package='px4_offboard',
             namespace='px4_offboard',
             executable='visualizer',
             name='visualizer'
         ),
+        # ros2 run px4_offboard tf_publisher
+    	Node(
+            package='px4_offboard',
+            executable='tf_publisher',
+            name='tf_publisher',
+            output='screen'
+        ),
+        # ros2 run px4_offboard rotor_joint_state_publisher
+        Node(
+            package='px4_offboard',
+            executable='rotor_joint_state_publisher',
+            name='rotor_joint_state_publisher',
+            output='screen'
+        ),
         Node(
             package='rviz2',
             namespace='',
             executable='rviz2',
             name='rviz2',
-            arguments=['-d', [os.path.join(package_dir, 'visualize.rviz')]]
+            arguments=['-d', [os.path.join(get_package_share_directory(description_pkg), "rviz", 'visualize.rviz')]]
         )
     ])
